@@ -14,7 +14,7 @@ Please send us first your report via email at security@trousseau.io with the fol
 * Other comment
 * Report by (github nickname)
 
-Once analyze, confirm, and find a mitigation together, we will oepn the necessary issues within the project 
+Once analyze, confirm, and find a mitigation together, we will oepn an issue and a security advisory within the project 
 to track the resolution and merge to the master branch.
 
 Thank you for helping to make Secrets safe! #sharingiscaring
