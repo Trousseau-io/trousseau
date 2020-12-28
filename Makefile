@@ -11,8 +11,8 @@ ifeq ($(GO),)
   $(error Could not find 'go' in path. Please install go, or if already installed either add it to your path or set GO to point to its directory)
 endif
 
-pkgs = $(shell GOFLAGS=-mod=vendor $(GO) list ./... | grep -vE -e /vendor/ -e /pkg/swagger/) 
-pkgDirs = $(shell GOFLAGS=-mod=vendor $(GO) list -f {{.Dir}} ./... | grep -vE -e /vendor/ -e /pkg/swagger/)
+pkgs = $(shell GOFLAGS=-mod=mod $(GO) list ./... | grep -vE -e /vendor/ -e /pkg/swagger/) 
+pkgDirs = $(shell GOFLAGS=-mod=mod $(GO) list -f {{.Dir}} ./... | grep -vE -e /vendor/ -e /pkg/swagger/)
 DIR_OUT:=/tmp
 
 #GOLANGCI:=$(shell command -v golangci-lint 2> /dev/null)
@@ -21,28 +21,35 @@ DIR_OUT:=/tmp
 GO_EXCLUDE := /vendor/|.pb.go|.gen.go
 GO_FILES_CMD := find . -name '*.go' | grep -v -E '$(GO_EXCLUDE)'
 
+# Validate Swagger Spec file
+.PHONY: validate
+validate:
+	swagger validate pkg/swagger/swagger.yml
+
+# Swagger API Go Code generation
+.PHONY: generate
+generate: validate
+	@echo "==> Go code generation from pkgs"
+	GOFLAGS=-mod=mod $(GO) generate $(pkgs)
+
 # Clean the playground
 .PHONY: clean 
 clean: 
+	@echo "==> Clean the playground"
 	rm -rf bin 
 	rm -rf vendor 
 	rm -rf pkg/swagger/server 
 
-
-
-# Code generation
-.PHONY: generate
-generate: 
-	@echo "==> Go code generation from pkgs"
-	GOFLAGS=-mod=vendor $(GO) generate $(pkgs)
-
+.PHONY: depend 
+depend: generate
+	@echo "==> Clean and updating trousseau's dependencies"
+	$(GO) mod tidy -v 
+	$(GO) mod verify 
+	$(GO) mod vendor 
+	# $(GO) get -u -v 
 
 .PHONY: build
-build:
+build: clean depend
+	@echo "==> Build trousseau's binaries"
 	$(GO) build -o bin/trousseaud trousseaud/main.go
 
-
-# Validate the swagger yaml file
-.PHONY: swagger.validate
-swagger.validate:
-	swagger validate pkg/swagger/swagger.yml
