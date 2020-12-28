@@ -3,9 +3,6 @@
 
 GO := go 
 
-DIRS_TO_CLEAN:=
-FILES_TO_CLEAN:=
-
 ## Checking if go is available on the target system 
 ifeq ($(origin GO), undefined)
   GO:=$(shell which go)
@@ -23,6 +20,15 @@ DIR_OUT:=/tmp
 
 GO_EXCLUDE := /vendor/|.pb.go|.gen.go
 GO_FILES_CMD := find . -name '*.go' | grep -v -E '$(GO_EXCLUDE)'
+
+# Clean the playground
+.PHONY: clean 
+clean: 
+	rm -rf bin 
+	rm -rf vendor 
+	rm -rf pkg/swagger/server 
+
+
 
 # Code generation
 .PHONY: generate
